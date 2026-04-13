@@ -17,34 +17,52 @@ These two documents are the seed. They describe this system in the same way this
 
 ## What to do next
 
+These steps are directives for a **human + AI agent** pair (e.g., you working with Claude, or another frontier agent). Each step names who does what. The human holds domain judgment and final decisions; the agent reads, proposes, drafts, and executes — never silently. All changes route through the documents first.
+
 ### 1. Validate the domain model
 
-Read `domain-model.md` with a domain expert (that's you — you are the domain expert for "spec-driven software evolution"). Ask yourself:
+**Human:** You are the domain expert. Read `domain-model.md` and form your own view before consulting the agent. For each concept, ask: is it real, is it named right, does it belong here, does the language feel natural when you speak it?
 
-- Are there concepts missing?
-- Are any concepts named wrong?
-- Are the boundaries between bounded contexts in the right places?
-- Does the ubiquitous language feel natural when you use it in conversation?
+**Agent:** Read `domain-model.md` end-to-end. Report back: (a) concepts whose definitions feel ambiguous or overloaded, (b) concepts that appear to overlap or conflict, (c) concepts you'd expect to exist but don't, (d) bounded-context boundaries that look load-bearing vs. arbitrary. Do not edit the document in this step — surface findings for the human to rule on.
+
+**Together:** For each finding, the human decides: keep, rename, split, merge, or add. The agent drafts the edit; the human approves before it lands.
 
 ### 2. Validate the specification
 
-Read `specification.md` and for each rule, ask:
+**Human:** Read `specification.md` rule-by-rule. For each, ask: is this the behavior I actually want? Are there edge cases this rule is silent about? Do any rules contradict each other?
 
-- Is this actually the behavior I want?
-- Are there edge cases this rule is silent about? (That's a Discovery.)
-- Do any rules contradict each other?
+**Agent:** Read `specification.md` and cross-check against `domain-model.md`. Report: (a) rules that reference concepts not in the domain model, (b) rules that appear to contradict other rules, (c) scenarios the specification is silent on that the domain model implies should be covered, (d) rules whose behavior is under-specified for an implementer. Classify each finding as Correction, Discovery, or Ambiguity.
+
+**Together:** The human adjudicates each finding. The agent drafts the specification update; the human approves.
 
 ### 3. Extract a knowledge graph from these documents
 
-Run [Graphify](https://github.com/safishamsi/graphify) (or equivalent) on this `seed/` folder. The resulting knowledge graph should reflect the domain model and specification. Compare the extracted graph against the domain model — discrepancies reveal either ambiguity in the documents or gaps in the extraction tool.
+**Agent:** Run [Graphify](https://github.com/safishamsi/graphify) (or equivalent) on this `seed/` folder. Produce the knowledge graph and a diff report comparing extracted concepts/relations against `domain-model.md`.
+
+**Human:** Review the diff. Every discrepancy is either (a) ambiguity in the documents — fix the documents, or (b) a gap in the extraction tool — note it as a Defect against the Extraction bounded context's eventual implementation.
+
+**Together:** Route each discrepancy to the right fix. Update documents before moving on.
 
 ### 4. Begin derivation
 
-Using the specification as input, derive the first code artifacts. Start with the bounded context that has the fewest dependencies on others. **Extraction** is a good candidate — it depends only on a corpus and produces a knowledge graph. It also already has a partial implementation (Graphify) that you can evaluate against the specification.
+**Together:** Choose the first bounded context to implement. Pick the one with fewest dependencies on others. **Extraction** is a strong candidate — it depends only on a corpus, produces a knowledge graph, and has a partial reference implementation (Graphify) to evaluate against the spec.
+
+**Agent:** Derive code artifacts from the specification rules for that bounded context. For each artifact, cite the specific specification rule(s) it implements. Write tests that encode each specification rule as an executable check. Do not introduce behavior not present in the spec — if you need to, stop and flag it as a Discovery for the human.
+
+**Human:** Review derivations for faithfulness to the spec, not for style. If the code does something the spec does not say, that is a divergence — either the spec is incomplete (Discovery: update the spec first) or the code is wrong (Defect: fix the code). Never let the code lead.
 
 ### 5. Use the system to build the system
 
-Once the first bounded context is implemented and tested against its specification rules, use the system's own change management process (Correction / Defect / Evolution / Discovery) to iterate. Every change to the system goes through its own spec-first workflow.
+Once the first bounded context is implemented and its tests pass against the specification, every subsequent change — human-initiated or agent-initiated — goes through the system's own change management process:
+
+- **Correction** — the specification described the wrong behavior. Update `specification.md` first, then the code.
+- **Defect** — the code does not match the specification. Fix the code.
+- **Discovery** — a scenario was never described. Add it to `specification.md` first, then update the code.
+- **Evolution** — the desired behavior has changed. Update `specification.md` first, then the code.
+
+**Human:** Classify each change into one of the four categories before work begins. This classification is the contract.
+
+**Agent:** Refuse to make changes that skip the classification step. If asked to "just fix the code," ask which category the change falls under. If the change is Correction, Discovery, or Evolution, update the documents first and surface the diff for human approval before touching code.
 
 ## The recursive property
 

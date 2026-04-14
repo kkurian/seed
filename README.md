@@ -2,11 +2,11 @@
 
 Software exists to deliver business value. But most of the cost and risk in software development isn't in writing code — it's in figuring out what the software should do, keeping it aligned with what the business actually needs, and changing it safely when those needs evolve. Current development processes are bad at this. Knowledge about what the system is supposed to do lives in people's heads, in meetings that weren't recorded, in documents that went stale the week after they were written. The code becomes the only record of intent, but code doesn't explain *why* it does what it does. Over time, changing the system becomes an act of archaeology — and every change risks breaking something nobody fully understands.
 
-This system takes a different approach. You write down what the software should do and why, in plain language, and keep that description current. The code is produced from that description — not the other way around. When the software needs to change, you change the description first, and the code follows.
+This system takes a different approach. You write down what the software should do and why, in plain language — both the domain it operates in and the behavior it must exhibit — and you keep those descriptions current. Automated checks encode them: structural checks verify the code's shape matches the domain, behavioral checks verify its runtime matches the specification. The code is produced to satisfy those checks — not the other way around. When the software needs to change, the descriptions change first, the checks follow, and the code follows the checks.
 
-Software is never fully correct up front. You discover what it should do through usage and experience. When you discover a problem, there are exactly four reasons it exists: you described the wrong behavior, the code doesn't match what you described, you need something you never thought to describe, or something happened that nobody anticipated. Each of these has a different fix, but in all four cases, you start by updating the description of what the system should do. The code is always downstream.
+Software is never fully correct up front. What it should do is discovered through usage and experience. When a problem is discovered, there are exactly four reasons it exists: the wrong thing was described, something needed was never described, something unanticipated happened, or the code doesn't match what was described. The first three are fixed by updating the descriptions — the domain model, the specification, or both — and letting the checks and code follow. The last means the code doesn't satisfy the descriptions, and that has two non-exclusive causes: the checks don't match the descriptions (missing or drifted), and/or the code doesn't match the descriptions. The fix is to correct whichever applies — re-align the checks with the descriptions first, then re-align the code with the checks, letting the checks fail before the code is changed. In every case, the descriptions lead and the code is downstream.
 
-This eliminates an entire category of software decay — the kind where someone makes a quick fix in the code, it works, nobody updates anything else, and over time the system's actual behavior and its intended behavior quietly diverge until no one can tell the difference.
+This eliminates an entire category of software decay — the kind where someone makes a quick fix or a quick addition in the code, it works, nobody updates anything else, and over time the system's actual shape and behavior quietly diverge from what was intended until no one can tell the difference.
 
 These two documents are the seed. They describe this system in the same way this system would describe any software: a description of the business domain and a description of the intended behavior. Once built, the system governs its own evolution by its own rules.
 
@@ -47,7 +47,7 @@ These steps are directives for a **human + AI agent** pair (e.g., you working wi
 
 **Together:** Choose the first bounded context to implement. Pick the one with fewest dependencies on others. **Extraction** is a strong candidate — it depends only on a corpus, produces a knowledge graph, and has a partial reference implementation (Graphify) to evaluate against the spec.
 
-**Agent:** Derive code artifacts from the specification rules for that bounded context. For each artifact, cite the specific specification rule(s) it implements. Write tests that encode each specification rule as an executable check. Do not introduce behavior not present in the spec — if you need to, stop and flag it as a Discovery for the human.
+**Agent:** Derive code artifacts from the domain model and specification rules for that bounded context. For each artifact, cite the specific domain concepts and specification rule(s) it implements. Write structural checks that encode the relevant parts of the domain model (naming, boundaries, relationships) and behavioral checks that encode each specification rule. Do not introduce structure or behavior not present in the descriptions — if you need to, stop and flag it as a Discovery for the human.
 
 **Human:** Review derivations for faithfulness to the spec, not for style. If the code does something the spec does not say, that is a divergence — either the spec is incomplete (Discovery: update the spec first) or the code is wrong (Defect: fix the code). Never let the code lead.
 
@@ -56,7 +56,7 @@ These steps are directives for a **human + AI agent** pair (e.g., you working wi
 Once the first bounded context is implemented and its tests pass against the specification, every subsequent change — human-initiated or agent-initiated — goes through the system's own change management process:
 
 - **Correction** — the specification described the wrong behavior. Update `specification.md` first, then the code.
-- **Defect** — the code does not match the specification. Fix the code.
+- **Defect** — the code does not satisfy the domain model or the specification. Two non-exclusive causes are possible: the checks don't match the descriptions, and/or the code doesn't. Fix whichever applies — re-align the checks with the descriptions first (adding missing ones, correcting drifted ones), then re-align the code, letting the checks fail before the code is changed.
 - **Discovery** — a scenario was never described. Add it to `specification.md` first, then update the code.
 - **Evolution** — the desired behavior has changed. Update `specification.md` first, then the code.
 

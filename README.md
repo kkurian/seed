@@ -13,54 +13,45 @@ These two documents are the seed. They describe this system in the same way this
 - **domain-model.md** — The ubiquitous language and concept map for the system. This is the domain model.
 - **specification.md** — The behavioral rules the system must implement. This is the specification.
 
-## What to do next
+## How to begin
 
-These steps are directives for a **human + AI agent** pair (e.g., you working with Claude, or another frontier agent). Each step names who does what. The human holds domain judgment and final decisions; the agent reads, proposes, drafts, and executes — never silently. All changes route through the documents first.
+Open this folder in a frontier coding agent (Claude Code, Cursor, or similar). Paste:
 
-### 1. Validate the domain model
+```
+Read README.md, domain-model.md, and specification.md. Then begin the agent protocol at Step 1. Lead the conversation — I am the domain expert and the decision-maker, but you drive.
+```
 
-**Human:** You are the domain expert. Read `domain-model.md` and form your own view before consulting the agent. For each concept, ask: is it real, is it named right, does it belong here, does the language feel natural when you speak it?
+From there, the agent runs the process. You adjudicate. Nothing in the documents or in code changes without your explicit approval of the specific diff.
 
-**Agent:** Read `domain-model.md` end-to-end. Report back: (a) concepts whose definitions feel ambiguous or overloaded, (b) concepts that appear to overlap or conflict, (c) concepts you'd expect to exist but don't, (d) bounded-context boundaries that look load-bearing vs. arbitrary. Do not edit the document in this step — surface findings for the human to rule on.
+## Agent protocol
 
-**Together:** For each finding, the human decides: keep, rename, split, merge, or add. The agent drafts the edit; the human approves before it lands.
+You are the agent. You lead a conversation with the human to validate the seed documents and then derive the system from them. The human holds domain judgment and every final decision; you read, report, propose, and draft.
 
-### 2. Validate the specification
+**Posture (binding in every step):**
 
-**Human:** Read `specification.md` rule-by-rule. For each, ask: is this the behavior I actually want? Are there edge cases this rule is silent about? Do any rules contradict each other?
+- Never edit `domain-model.md`, `specification.md`, or any derived artifact without explicit human approval of the specific diff.
+- Cite the source line for every finding you surface (e.g., `specification.md:42`).
+- On ambiguity, stop and ask. Do not infer intent to keep momentum.
+- Do not introduce structure or behavior not present in the descriptions. If you need to, stop and flag it as a Discovery.
+- If asked to "just fix the code," refuse until the change is classified as Correction, Defect, Discovery, or Evolution.
+- Work one step at a time. Do not advance until the human confirms the current step is complete.
 
-**Agent:** Read `specification.md` and cross-check against `domain-model.md`. Report: (a) rules that reference concepts not in the domain model, (b) rules that appear to contradict other rules, (c) scenarios the specification is silent on that the domain model implies should be covered, (d) rules whose behavior is under-specified for an implementer. Classify each finding as Correction, Discovery, or Ambiguity.
+**Step 1 — Validate the domain model.** Read `domain-model.md` end-to-end. Report: (a) concepts whose definitions feel ambiguous or overloaded, (b) concepts that overlap or conflict, (c) concepts you'd expect to exist but don't, (d) bounded-context boundaries that look load-bearing vs. arbitrary. For each finding, ask the human to rule: keep, rename, split, merge, or add. Draft each edit. Apply only after the human approves the diff.
 
-**Together:** The human adjudicates each finding. The agent drafts the specification update; the human approves.
+**Step 2 — Validate the specification.** Read `specification.md` and cross-check against `domain-model.md`. Report: (a) rules that reference concepts not in the domain model, (b) rules that contradict other rules, (c) scenarios the specification is silent on that the domain model implies should be covered, (d) rules under-specified for an implementer. Classify each finding as Correction, Discovery, or Ambiguity. Ask the human to adjudicate each one. Draft the edit. Apply after approval.
 
-### 3. Extract a knowledge graph from these documents
+**Step 3 — Extract a knowledge graph.** Run [Graphify](https://github.com/safishamsi/graphify) (or equivalent) on this folder. Produce the knowledge graph and a diff report comparing extracted concepts and relations against `domain-model.md`. For each discrepancy, ask the human to route it: ambiguity in the documents (fix the documents) or gap in the extraction tool (note as a Defect against the Extraction bounded context's eventual implementation). Update documents before moving on.
 
-**Agent:** Run [Graphify](https://github.com/safishamsi/graphify) (or equivalent) on this `seed/` folder. Produce the knowledge graph and a diff report comparing extracted concepts/relations against `domain-model.md`.
+**Step 4 — Begin derivation.** Propose the first bounded context to implement — the one with fewest dependencies on others. **Extraction** is a strong candidate because it depends only on a corpus, produces a knowledge graph, and has a partial reference implementation to evaluate against. Ask the human to confirm or choose differently. Once chosen, derive code artifacts from the domain model and specification for that context. For each artifact, cite the specific domain concepts and specification rule(s) it implements. Write structural checks that encode the relevant parts of the domain model and behavioral checks that encode each specification rule. Present the derivation for the human to review for faithfulness — not style.
 
-**Human:** Review the diff. Every discrepancy is either (a) ambiguity in the documents — fix the documents, or (b) a gap in the extraction tool — note it as a Defect against the Extraction bounded context's eventual implementation.
+**Step 5 — Govern every subsequent change.** Once the first bounded context is implemented and its checks pass, every subsequent change — whether the human proposes it or you do — begins with classification. Ask the human to classify before any work starts; that classification is the contract.
 
-**Together:** Route each discrepancy to the right fix. Update documents before moving on.
+- **Correction** — a description was wrong. Update the relevant document first, then checks, then code.
+- **Defect** — the code does not satisfy the descriptions. By design, the code is produced to satisfy the checks, so the cause is that the checks have drifted from the descriptions (missing or wrong). Re-align the checks with the descriptions, let them fail, and let the code follow.
+- **Discovery** — a scenario was never described. Add it to the relevant document first, then checks, then code.
+- **Evolution** — the desired behavior has changed. Update the relevant document first, then checks, then code.
 
-### 4. Begin derivation
-
-**Together:** Choose the first bounded context to implement. Pick the one with fewest dependencies on others. **Extraction** is a strong candidate — it depends only on a corpus, produces a knowledge graph, and has a partial reference implementation (Graphify) to evaluate against the spec.
-
-**Agent:** Derive code artifacts from the domain model and specification rules for that bounded context. For each artifact, cite the specific domain concepts and specification rule(s) it implements. Write structural checks that encode the relevant parts of the domain model (naming, boundaries, relationships) and behavioral checks that encode each specification rule. Do not introduce structure or behavior not present in the descriptions — if you need to, stop and flag it as a Discovery for the human.
-
-**Human:** Review derivations for faithfulness to the spec, not for style. If the code does something the spec does not say, that is a divergence — either the spec is incomplete (Discovery: update the spec first) or the code is wrong (Defect: fix the code). Never let the code lead.
-
-### 5. Use the system to build the system
-
-Once the first bounded context is implemented and its tests pass against the specification, every subsequent change — human-initiated or agent-initiated — goes through the system's own change management process:
-
-- **Correction** — the specification described the wrong behavior. Update `specification.md` first, then the code.
-- **Defect** — the code does not satisfy the domain model or the specification. By design, the code is produced to satisfy the checks, so the cause is that the checks have drifted from the descriptions (missing or wrong). Re-align the checks with the descriptions, let them fail, and let the code follow.
-- **Discovery** — a scenario was never described. Add it to `specification.md` first, then update the code.
-- **Evolution** — the desired behavior has changed. Update `specification.md` first, then the code.
-
-**Human:** Classify each change into one of the four categories before work begins. This classification is the contract.
-
-**Agent:** Refuse to make changes that skip the classification step. If asked to "just fix the code," ask which category the change falls under. If the change is Correction, Discovery, or Evolution, update the documents first and surface the diff for human approval before touching code.
+If a category requires a document update, surface the diff for human approval before touching anything downstream.
 
 ## The recursive property
 

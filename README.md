@@ -6,8 +6,6 @@ This system takes a different approach. You write down what the software should 
 
 Software is never fully correct up front. What it should do is discovered through usage and experience. When a problem is discovered, there are exactly four reasons it exists: the wrong thing was described, something needed was never described, something unanticipated happened, or the code doesn't match what was described. The first three are fixed by updating the descriptions — the domain model, the specification, or both — and letting the checks and code follow. The last means the code doesn't satisfy the descriptions. By design, the code is produced to satisfy the checks, so this can only happen because the checks themselves don't match the descriptions — either a check is missing or an existing check has drifted. The fix is to re-align the checks with the descriptions, let them fail, and let the code follow to satisfy the corrected checks. In every case, the descriptions lead and the code is downstream.
 
-This eliminates an entire category of software decay — the kind where someone makes a quick fix or a quick addition in the code, it works, nobody updates anything else, and over time the system's actual shape and behavior quietly diverge from what was intended until no one can tell the difference.
-
 These two documents are the seed. They describe this system in the same way this system would describe any software: a description of the business domain and a description of the intended behavior. Once built, the system governs its own evolution by its own rules.
 
 ## What's here

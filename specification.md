@@ -1,5 +1,7 @@
 # Specification: Spec-Driven Software Evolution
 
+> This file defines the behavioral rules of the spec-driven evolution process itself. The agent protocol in `README.md` operates according to these rules. It is immutable: the agent does not propose edits to it, and it does not change as applications are built. Application-specific behavioral rules belong in `application-specification.md`.
+
 ## Bounded Context: Extraction
 
 ### Extract Knowledge Graph from Corpus

@@ -1,5 +1,7 @@
 # Domain Model: Spec-Driven Software Evolution
 
+> This file defines the vocabulary of the spec-driven evolution process itself — the scaffold the agent uses to reason about any application. It is immutable: the agent does not propose edits to it, and it does not change as applications are built. Application-specific domain concepts belong in `application-domain-model.md`.
+
 ## Ubiquitous Language
 
 ### Corpus
